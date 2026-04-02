@@ -644,11 +644,230 @@ function loadImage(src) {
   });
 }
 
+function formatThaiDateTimeNow() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+
+  const map = {};
+  parts.forEach(p => {
+    if (p.type !== "literal") map[p.type] = p.value;
+  });
+
+  return `${map.day}/${map.month}/${map.year} ${map.hour}:${map.minute}:${map.second}`;
+}
+
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = String(text || "").split(/\s+/);
+  let line = "";
+  const lines = [];
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line ? `${line} ${words[i]}` : words[i];
+    const w = ctx.measureText(testLine).width;
+    if (w > maxWidth && line) {
+      lines.push(line);
+      line = words[i];
+    } else {
+      line = testLine;
+    }
+  }
+
+  if (line) lines.push(line);
+
+  lines.forEach((ln, idx) => {
+    ctx.fillText(ln, x, y + (idx * lineHeight));
+  });
+
+  return lines.length;
+}
+
+async function createStampedPhotoDataUrl(photoDataUrl, signatureDataUrl, supervisorName, acknowledgedAt) {
+  const photo = await loadImage(photoDataUrl);
+  const sign = await loadImage(signatureDataUrl);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = photo.width;
+  canvas.height = photo.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(photo, 0, 0, canvas.width, canvas.height);
+
+  const pad = Math.max(20, Math.round(canvas.width * 0.025));
+  const panelHeight = Math.max(150, Math.round(canvas.height * 0.22));
+  const panelY = canvas.height - panelHeight - pad;
+
+  ctx.fillStyle = "rgba(255,255,255,0.88)";
+  ctx.fillRect(pad, panelY, canvas.width - (pad * 2), panelHeight);
+
+  ctx.strokeStyle = "rgba(15,23,42,0.12)";
+  ctx.lineWidth = Math.max(1, Math.round(canvas.width * 0.0015));
+  ctx.strokeRect(pad, panelY, canvas.width - (pad * 2), panelHeight);
+
+  const leftX = pad + Math.max(14, Math.round(canvas.width * 0.015));
+  const topY = panelY + Math.max(24, Math.round(canvas.height * 0.03));
+  const rightAreaWidth = Math.max(180, Math.round(canvas.width * 0.24));
+  const textAreaWidth = canvas.width - (pad * 2) - rightAreaWidth - Math.max(28, Math.round(canvas.width * 0.03));
+
+  const nameFont = Math.max(22, Math.round(canvas.width * 0.022));
+  const textFont = Math.max(18, Math.round(canvas.width * 0.017));
+  const lineHeight = Math.max(24, Math.round(textFont * 1.5));
+
+  ctx.fillStyle = "#0f172a";
+  ctx.font = `700 ${nameFont}px "Noto Sans Thai", sans-serif`;
+  ctx.textBaseline = "middle";
+  ctx.fillText(supervisorName || "-", leftX, topY);
+
+  ctx.font = `600 ${textFont}px "Noto Sans Thai", sans-serif`;
+  const ackText = `รับทราบ เมื่อ ${acknowledgedAt}`;
+  wrapCanvasText(
+    ctx,
+    ackText,
+    leftX,
+    topY + Math.max(34, Math.round(canvas.height * 0.035)),
+    textAreaWidth,
+    lineHeight
+  );
+
+  const signMaxW = rightAreaWidth - 12;
+  const signMaxH = panelHeight - 26;
+  const signRatio = Math.min(signMaxW / sign.width, signMaxH / sign.height);
+  const signW = Math.max(1, Math.round(sign.width * signRatio));
+  const signH = Math.max(1, Math.round(sign.height * signRatio));
+
+  const signX = canvas.width - pad - signW - 12;
+  const signY = panelY + Math.round((panelHeight - signH) / 2);
+
+  ctx.drawImage(sign, signX, signY, signW, signH);
+
+  return canvas.toDataURL("image/jpeg", 0.90);
+}
+
+function buildSubmitSummaryHtml(saved) {
+  const photoHtml = (saved.stampedPreviewUrls || []).map((src, idx) => `
+    <div class="swalPhotoItem">
+      <img src="${src}" alt="saved-photo-${idx + 1}">
+      <div class="swalPhotoCap">รูปภาพ ${idx + 1}</div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="swalSummary">
+      <div class="swalSummaryGrid">
+        <div class="swalInfoCard">
+          <div class="swalInfoTitle">ข้อมูลที่บันทึกสำเร็จ</div>
+          <div class="swalMeta">
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">ผู้บันทึก</span>
+              <span class="swalMetaValue">${escapeHtml(saved.recorderName)}</span>
+            </div>
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">วันเวลาบันทึก</span>
+              <span class="swalMetaValue">${escapeHtml(saved.timestamp)}</span>
+            </div>
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">วันที่เกิดเหตุ</span>
+              <span class="swalMetaValue">${escapeHtml(saved.date)}</span>
+            </div>
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">เวลา</span>
+              <span class="swalMetaValue">${escapeHtml(saved.timeStart)} - ${escapeHtml(saved.timeEnd)}</span>
+            </div>
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">ประเภทหัวหน้างาน</span>
+              <span class="swalMetaValue">${escapeHtml(saved.supervisorType)}</span>
+            </div>
+            <div class="swalMetaItem">
+              <span class="swalMetaLabel">ชื่อหัวหน้างาน</span>
+              <span class="swalMetaValue">${escapeHtml(saved.supervisorName)}</span>
+            </div>
+            <div class="swalMetaItem" style="grid-column:1/-1;">
+              <span class="swalMetaLabel">สถานที่</span>
+              <span class="swalMetaValue">${escapeHtml(saved.location)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="swalInfoCard">
+          <div class="swalInfoTitle">เกิดเหตุ</div>
+          <div class="swalTextBlock">${escapeHtml(saved.incident)}</div>
+        </div>
+
+        <div class="swalInfoCard">
+          <div class="swalInfoTitle">การแก้ไขเบื้องต้น</div>
+          <div class="swalTextBlock">${escapeHtml(saved.initialAction)}</div>
+        </div>
+
+        <div class="swalInfoCard">
+          <div class="swalInfoTitle">รูปภาพที่บันทึก (${saved.stampedPreviewUrls.length} ภาพ)</div>
+          <div class="swalPhotoGrid">${photoHtml || '<div class="swalTextBlock">ไม่มีรูปภาพ</div>'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function showSavedSummarySwal(saved) {
+  if (typeof Swal === "undefined") {
+    showResult("บันทึกข้อมูลสำเร็จ", "ok");
+    return;
+  }
+
+  await Swal.fire({
+    icon: "success",
+    title: "บันทึกข้อมูลสำเร็จ",
+    html: buildSubmitSummaryHtml(saved),
+    width: 920,
+    confirmButtonText: "ปิดหน้าต่าง",
+    confirmButtonColor: "#2563eb",
+    allowOutsideClick: false,
+    allowEscapeKey: true
+  });
+
+  try { window.close(); } catch (_) {}
+}
+
 async function onSubmit(e) {
   e.preventDefault();
 
   try {
     validateForm();
+
+    const acknowledgedAt = formatThaiDateTimeNow();
+
+    const stampedPreviewUrls = await Promise.all(
+      state.photos
+        .filter(p => p && p.dataUrl)
+        .map(async (p, i) => {
+          const stamped = await createStampedPhotoDataUrl(
+            p.dataUrl,
+            state.signatureDataUrl,
+            el.supervisorName.value,
+            acknowledgedAt
+          );
+
+          return {
+            name: p.name || `photo_${i + 1}.jpg`,
+            dataUrl: stamped
+          };
+        })
+    );
 
     const payload = {
       action: "submit",
@@ -664,12 +883,7 @@ async function onSubmit(e) {
       supervisorName: el.supervisorName.value,
       supervisorSignatureBase64: state.signatureDataUrl,
       recorderName: state.sessionUser,
-      photos: state.photos
-        .filter(p => p && p.dataUrl)
-        .map((p, i) => ({
-          name: p.name || `photo_${i + 1}.jpg`,
-          dataUrl: p.dataUrl
-        }))
+      photos: stampedPreviewUrls
     };
 
     showLoading(true);
@@ -684,16 +898,24 @@ async function onSubmit(e) {
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || "บันทึกข้อมูลไม่สำเร็จ");
 
-    const msg = [
-      "บันทึกข้อมูลสำเร็จ",
-      `ผู้บันทึก: ${state.sessionUser || "-"}`,
-      `Timestamp: ${data.timestamp || "-"}`,
-      `จำนวนรูปภาพ: ${data.photoCount || 0}`,
-      `Folder ID: ${data.folderId || "-"}`
-    ].join("\n");
+    const savedSummary = {
+      recorderName: state.sessionUser || "-",
+      timestamp: data.timestamp || acknowledgedAt,
+      date: el.incidentDate.value || "-",
+      timeStart: `${el.startHour.value}:${el.startMinute.value}:00`,
+      timeEnd: `${el.endHour.value}:${el.endMinute.value}:00`,
+      location: el.location.value.trim(),
+      incident: el.incidentText.value.trim(),
+      initialAction: el.initialAction.value.trim(),
+      supervisorType: el.supervisorType.value,
+      supervisorName: el.supervisorName.value,
+      stampedPreviewUrls: stampedPreviewUrls.map(x => x.dataUrl)
+    };
 
-    showResult(msg, "ok");
+    showResult("", "");
+    await showSavedSummarySwal(savedSummary);
     resetForm(false);
+
   } catch (err) {
     showResult(err.message || "เกิดข้อผิดพลาด", "error");
   } finally {
