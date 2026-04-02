@@ -878,7 +878,7 @@ async function showSavedSummarySwal(saved) {
     title: "บันทึกข้อมูลสำเร็จ",
     html: buildSubmitSummaryHtml(saved),
     width: 860,
-    confirmButtonText: "ปิดหน้าต่าง",
+    confirmButtonText: "ปิด",
     confirmButtonColor: "#2563eb",
     allowOutsideClick: false,
     allowEscapeKey: true,
@@ -895,7 +895,8 @@ async function showSavedSummarySwal(saved) {
     }
   });
 
-  try { window.close(); } catch (_) {}
+  // ปิดเฉพาะ SweetAlert เท่านั้น
+  // ห้าม window.close()
 }
 
 async function onSubmit(e) {
