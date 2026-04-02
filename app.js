@@ -1,6 +1,3 @@
-
-
-
 const API_BASE = "https://reportingproblam.somchaibutphon.workers.dev";
 
 const state = {
@@ -761,62 +758,62 @@ async function createStampedPhotoDataUrl(photoDataUrl, signatureDataUrl, supervi
 
 function buildSubmitSummaryHtml(saved) {
   const photoHtml = (saved.stampedPreviewUrls || []).map((src, idx) => `
-    <div class="swalPhotoItem">
+    <div class="savedPhotoCard">
       <img src="${src}" alt="saved-photo-${idx + 1}">
-      <div class="swalPhotoCap">รูปภาพ ${idx + 1}</div>
+      <div class="savedPhotoCap">รูปภาพ ${idx + 1}</div>
     </div>
   `).join("");
 
   return `
-    <div class="swalSummary">
-      <div class="swalSummaryGrid">
-        <div class="swalInfoCard">
-          <div class="swalInfoTitle">ข้อมูลที่บันทึกสำเร็จ</div>
-          <div class="swalMeta">
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">ผู้บันทึก</span>
-              <span class="swalMetaValue">${escapeHtml(saved.recorderName)}</span>
-            </div>
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">วันเวลาบันทึก</span>
-              <span class="swalMetaValue">${escapeHtml(saved.timestamp)}</span>
-            </div>
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">วันที่เกิดเหตุ</span>
-              <span class="swalMetaValue">${escapeHtml(saved.date)}</span>
-            </div>
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">เวลา</span>
-              <span class="swalMetaValue">${escapeHtml(saved.timeStart)} - ${escapeHtml(saved.timeEnd)}</span>
-            </div>
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">ประเภทหัวหน้างาน</span>
-              <span class="swalMetaValue">${escapeHtml(saved.supervisorType)}</span>
-            </div>
-            <div class="swalMetaItem">
-              <span class="swalMetaLabel">ชื่อหัวหน้างาน</span>
-              <span class="swalMetaValue">${escapeHtml(saved.supervisorName)}</span>
-            </div>
-            <div class="swalMetaItem" style="grid-column:1/-1;">
-              <span class="swalMetaLabel">สถานที่</span>
-              <span class="swalMetaValue">${escapeHtml(saved.location)}</span>
-            </div>
+    <div class="savedSummaryWrap">
+      <div class="savedSummaryBlock">
+        <div class="savedSummaryBlockTitle">ข้อมูลหลัก</div>
+        <div class="savedSummaryMeta">
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">ผู้บันทึก</span>
+            <span class="savedMetaValue">${escapeHtml(saved.recorderName)}</span>
+          </div>
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">วันเวลาบันทึก</span>
+            <span class="savedMetaValue">${escapeHtml(saved.timestamp)}</span>
+          </div>
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">วันที่</span>
+            <span class="savedMetaValue">${escapeHtml(saved.date)}</span>
+          </div>
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">เวลา</span>
+            <span class="savedMetaValue">${escapeHtml(saved.timeStart)} - ${escapeHtml(saved.timeEnd)}</span>
+          </div>
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">ประเภทหัวหน้างาน</span>
+            <span class="savedMetaValue">${escapeHtml(saved.supervisorType)}</span>
+          </div>
+          <div class="savedMetaItem">
+            <span class="savedMetaLabel">ชื่อหัวหน้างาน</span>
+            <span class="savedMetaValue">${escapeHtml(saved.supervisorName)}</span>
+          </div>
+          <div class="savedMetaItem full">
+            <span class="savedMetaLabel">สถานที่</span>
+            <span class="savedMetaValue">${escapeHtml(saved.location)}</span>
           </div>
         </div>
+      </div>
 
-        <div class="swalInfoCard">
-          <div class="swalInfoTitle">เกิดเหตุ</div>
-          <div class="swalTextBlock">${escapeHtml(saved.incident)}</div>
-        </div>
+      <div class="savedSummaryBlock">
+        <div class="savedSummaryBlockTitle">รายละเอียดเหตุการณ์</div>
+        <div class="savedTextCard">${escapeHtml(saved.incident)}</div>
+      </div>
 
-        <div class="swalInfoCard">
-          <div class="swalInfoTitle">การแก้ไขเบื้องต้น</div>
-          <div class="swalTextBlock">${escapeHtml(saved.initialAction)}</div>
-        </div>
+      <div class="savedSummaryBlock">
+        <div class="savedSummaryBlockTitle">การแก้ไขเบื้องต้น</div>
+        <div class="savedTextCard">${escapeHtml(saved.initialAction)}</div>
+      </div>
 
-        <div class="swalInfoCard">
-          <div class="swalInfoTitle">รูปภาพที่บันทึก (${saved.stampedPreviewUrls.length} ภาพ)</div>
-          <div class="swalPhotoGrid">${photoHtml || '<div class="swalTextBlock">ไม่มีรูปภาพ</div>'}</div>
+      <div class="savedSummaryBlock">
+        <div class="savedSummaryBlockTitle">รูปภาพที่บันทึก (${saved.stampedPreviewUrls.length} ภาพ)</div>
+        <div class="savedPhotoGrid">
+          ${photoHtml || '<div class="savedTextCard">ไม่มีรูปภาพ</div>'}
         </div>
       </div>
     </div>
@@ -830,14 +827,24 @@ async function showSavedSummarySwal(saved) {
   }
 
   await Swal.fire({
-    icon: "success",
     title: "บันทึกข้อมูลสำเร็จ",
     html: buildSubmitSummaryHtml(saved),
-    width: 920,
+    width: 860,
     confirmButtonText: "ปิดหน้าต่าง",
     confirmButtonColor: "#2563eb",
     allowOutsideClick: false,
-    allowEscapeKey: true
+    allowEscapeKey: true,
+    showClass: {
+      popup: "swal2-show"
+    },
+    hideClass: {
+      popup: ""
+    },
+    customClass: {
+      popup: "savedSummaryPopup",
+      title: "savedSummaryTitle",
+      htmlContainer: "savedSummaryHtml"
+    }
   });
 
   try { window.close(); } catch (_) {}
@@ -913,9 +920,14 @@ async function onSubmit(e) {
     };
 
     showResult("", "");
+
+    showLoading(false);
+    el.submitBtn.disabled = false;
+
     await showSavedSummarySwal(savedSummary);
     resetForm(false);
 
+    return;
   } catch (err) {
     showResult(err.message || "เกิดข้อผิดพลาด", "error");
   } finally {
@@ -954,12 +966,6 @@ function resetForm(clearMessage = true) {
   closeCameraModal();
 
   if (clearMessage) showResult("", "");
-}
-
-function showCameraEmpty(message) {
-  el.cameraVideo.classList.add("hidden");
-  el.cameraEmpty.classList.remove("hidden");
-  el.cameraEmpty.textContent = message;
 }
 
 function showLoginResult(message, type) {
