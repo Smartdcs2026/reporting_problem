@@ -20,7 +20,6 @@
 
       --line:#d9e4f1;
       --line-strong:#bfd1e6;
-      --line-deep:#99b3d3;
 
       --primary:#2563eb;
       --primary-hover:#1d4ed8;
@@ -54,7 +53,6 @@
 
     .hidden{ display:none !important; }
 
-    /* LOGIN LAYOUT */
     .login-shell{
       min-height:100vh;
       display:flex;
@@ -65,12 +63,12 @@
 
     .login-card{
       width:min(460px,100%);
-      background:rgba(255,255,255,.92);
+      background:rgba(255,255,255,.94);
       backdrop-filter:blur(10px);
       border:1px solid rgba(191,209,230,.85);
       border-radius:28px;
       box-shadow:var(--shadow-lg);
-      padding:24px;
+      padding:26px;
     }
 
     .login-head{
@@ -107,7 +105,6 @@
       line-height:1.6;
     }
 
-    /* APP LAYOUT */
     .page{
       max-width:1040px;
       margin:0 auto;
@@ -231,7 +228,7 @@
       color:var(--text);
       background:#fff;
       outline:none;
-      transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+      transition:border-color .18s ease, box-shadow .18s ease;
     }
 
     textarea{
@@ -310,6 +307,16 @@
     .btn-danger-soft{
       background:#fee2e2;
       color:#991b1b;
+    }
+
+    .login-actions{
+      display:flex;
+      justify-content:center;
+      margin-top:18px;
+    }
+
+    .login-actions .btn{
+      min-width:180px;
     }
 
     .upload-grid{
@@ -506,7 +513,6 @@
       margin-top:12px;
     }
 
-    /* CAMERA */
     .camera-stage{
       width:100%;
       border-radius:18px;
@@ -605,6 +611,10 @@
         height:58px;
         flex-basis:58px;
       }
+
+      .login-actions .btn{
+        width:100%;
+      }
     }
   </style>
 </head>
@@ -626,7 +636,7 @@
           <div class="hint">ระบบจะตรวจสอบจากชีท Operation คอลัมน์ Pass</div>
         </div>
 
-        <div class="actions">
+        <div class="login-actions">
           <button type="submit" class="btn btn-primary" id="loginBtn">เข้าสู่ระบบ</button>
         </div>
 
@@ -761,7 +771,6 @@
     </div>
   </div>
 
-  <!-- SIGNATURE MODAL -->
   <div id="signatureOverlay" class="overlay hidden">
     <div class="modal">
       <div class="modal-head">
@@ -781,7 +790,6 @@
     </div>
   </div>
 
-  <!-- CAMERA MODAL -->
   <div id="cameraOverlay" class="overlay hidden">
     <div class="modal">
       <div class="modal-head">
