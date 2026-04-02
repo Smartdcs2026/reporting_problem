@@ -707,121 +707,109 @@ async function createStampedPhotoDataUrl(photoDataUrl, signatureDataUrl, supervi
   ctx.drawImage(photo, 0, 0, canvas.width, canvas.height);
 
   const pad = Math.max(18, Math.round(canvas.width * 0.022));
-  const panelWidth = canvas.width - (pad * 2);
-  const panelHeight = Math.max(118, Math.round(canvas.height * 0.16));
-  const panelY = canvas.height - panelHeight - pad;
   const panelX = pad;
+  const panelW = canvas.width - (pad * 2);
+  const panelH = Math.max(105, Math.round(canvas.height * 0.145));
+  const panelY = canvas.height - panelH - pad;
 
-  // แถบพื้นหลังให้จางลง ดูเบาและไม่แย่งภาพ
+  // พื้นหลังจางลง
   ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.56)";
-  roundRectPath(ctx, panelX, panelY, panelWidth, panelHeight, Math.max(14, Math.round(panelHeight * 0.16)));
+  roundedRect(ctx, panelX, panelY, panelW, panelH, Math.max(12, Math.round(panelH * 0.18)));
+  ctx.fillStyle = "rgba(255,255,255,0.42)";
   ctx.fill();
-
-  // เส้นกรอบบางมาก
-  ctx.strokeStyle = "rgba(15,23,42,0.10)";
-  ctx.lineWidth = Math.max(1, Math.round(canvas.width * 0.0012));
+  ctx.strokeStyle = "rgba(15,23,42,0.08)";
+  ctx.lineWidth = Math.max(1, Math.round(canvas.width * 0.001));
   ctx.stroke();
   ctx.restore();
 
-  // layout ภายในแถบ
-  const innerPadX = Math.max(14, Math.round(panelWidth * 0.028));
-  const innerPadY = Math.max(12, Math.round(panelHeight * 0.14));
+  const innerPadX = Math.max(12, Math.round(panelW * 0.02));
+  const innerPadY = Math.max(10, Math.round(panelH * 0.16));
 
   const contentX = panelX + innerPadX;
   const contentY = panelY + innerPadY;
-  const contentW = panelWidth - (innerPadX * 2);
-  const contentH = panelHeight - (innerPadY * 2);
+  const contentW = panelW - (innerPadX * 2);
+  const contentH = panelH - (innerPadY * 2);
 
-  // โซนซ้าย = ลายเซ็น
-  const signAreaW = Math.max(160, Math.round(contentW * 0.30));
-  const signAreaH = contentH;
-
-  // โซนขวา = ข้อความ
-  const gap = Math.max(12, Math.round(contentW * 0.022));
+  // ซ้ายเป็นลายเซ็น ขวาเป็นข้อความ
+  const signAreaW = Math.max(140, Math.round(contentW * 0.28));
+  const gap = Math.max(10, Math.round(contentW * 0.02));
   const textX = contentX + signAreaW + gap;
   const textW = contentW - signAreaW - gap;
 
-  // คำนวณขนาดลายเซ็น
+  // ลายเซ็น
   const signMaxW = signAreaW;
-  const signMaxH = Math.max(44, Math.round(signAreaH * 0.72));
+  const signMaxH = Math.max(36, Math.round(contentH * 0.72));
   const signScale = Math.min(signMaxW / sign.width, signMaxH / sign.height);
   const signW = Math.max(1, Math.round(sign.width * signScale));
   const signH = Math.max(1, Math.round(sign.height * signScale));
-
-  // วางลายเซ็นให้อยู่กึ่งกลางโซนซ้าย
   const signX = contentX + Math.round((signAreaW - signW) / 2);
-  const signY = contentY + Math.max(0, Math.round((signAreaH - signH) / 2) - 10);
+  const signY = contentY + Math.round((contentH - signH) / 2) - 6;
 
-  // วาดลายเซ็นแบบนุ่มขึ้นเล็กน้อย
   ctx.save();
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.88;
   ctx.drawImage(sign, signX, signY, signW, signH);
   ctx.restore();
 
   // เส้นใต้ลายเซ็นบาง ๆ
-  const underlineW = Math.min(signAreaW * 0.82, signW * 0.92);
-  const underlineX = contentX + Math.round((signAreaW - underlineW) / 2);
-  const underlineY = contentY + contentH - Math.max(8, Math.round(contentH * 0.10));
-
   ctx.save();
-  ctx.strokeStyle = "rgba(15,23,42,0.18)";
-  ctx.lineWidth = Math.max(1, Math.round(canvas.width * 0.0011));
+  ctx.strokeStyle = "rgba(15,23,42,0.14)";
+  ctx.lineWidth = Math.max(1, Math.round(canvas.width * 0.00095));
+  const lineW = Math.min(signAreaW * 0.8, signW * 0.92);
+  const lineX = contentX + Math.round((signAreaW - lineW) / 2);
+  const lineY = contentY + contentH - 6;
   ctx.beginPath();
-  ctx.moveTo(underlineX, underlineY);
-  ctx.lineTo(underlineX + underlineW, underlineY);
+  ctx.moveTo(lineX, lineY);
+  ctx.lineTo(lineX + lineW, lineY);
   ctx.stroke();
   ctx.restore();
 
-  // ข้อความฝั่งขวา
-  const titleFont = Math.max(17, Math.round(canvas.width * 0.0155));
-  const nameFont = Math.max(19, Math.round(canvas.width * 0.018));
-  const metaFont = Math.max(15, Math.round(canvas.width * 0.0138));
-  const lineGap = Math.max(7, Math.round(canvas.height * 0.006));
+  // ข้อความ
+  const titleFont = Math.max(15, Math.round(canvas.width * 0.0135));
+  const nameFont = Math.max(17, Math.round(canvas.width * 0.016));
+  const metaFont = Math.max(13, Math.round(canvas.width * 0.0122));
 
-  let cursorY = contentY + Math.max(4, Math.round(contentH * 0.06));
-
+  let y = contentY + 2;
   ctx.fillStyle = "#0f172a";
   ctx.textBaseline = "top";
 
   ctx.font = `700 ${titleFont}px "Noto Sans Thai", sans-serif`;
-  ctx.fillText("รับทราบแล้ว", textX, cursorY);
+  ctx.fillText("รับทราบแล้ว", textX, y);
 
-  cursorY += titleFont + lineGap;
+  y += titleFont + 4;
 
   ctx.font = `700 ${nameFont}px "Noto Sans Thai", sans-serif`;
-  const usedNameLines = wrapCanvasText(
+  const nameLines = wrapCanvasText(
     ctx,
     supervisorName || "-",
     textX,
-    cursorY,
+    y,
     textW,
-    Math.round(nameFont * 1.35)
+    Math.round(nameFont * 1.28)
   );
 
-  cursorY += (usedNameLines * Math.round(nameFont * 1.35)) + Math.max(4, lineGap - 1);
+  y += (nameLines * Math.round(nameFont * 1.28)) + 4;
 
   ctx.font = `600 ${metaFont}px "Noto Sans Thai", sans-serif`;
   wrapCanvasText(
     ctx,
     `เมื่อ ${acknowledgedAt}`,
     textX,
-    cursorY,
+    y,
     textW,
-    Math.round(metaFont * 1.45)
+    Math.round(metaFont * 1.32)
   );
 
   return canvas.toDataURL("image/jpeg", 0.90);
 }
 
-function roundRectPath(ctx, x, y, w, h, r) {
-  const radius = Math.min(r, w / 2, h / 2);
+function roundedRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y, x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x, y + h, radius);
-  ctx.arcTo(x, y + h, x, y, radius);
-  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
   ctx.closePath();
 }
 function buildSubmitSummaryHtml(saved) {
@@ -832,56 +820,48 @@ function buildSubmitSummaryHtml(saved) {
     </div>
   `).join("");
 
+  const metaItems = [
+    ["ผู้บันทึก", saved.recorderName],
+    ["วันเวลาบันทึก", saved.timestamp],
+    ["วันที่", saved.date],
+    ["เวลา", `${saved.timeStart} - ${saved.timeEnd}`],
+    ["ประเภทหัวหน้างาน", saved.supervisorType],
+    ["ชื่อหัวหน้างาน", saved.supervisorName]
+  ].map(([label, value]) => `
+    <div class="savedMiniItem">
+      <span class="savedMiniLabel">${escapeHtml(label)}</span>
+      <span class="savedMiniValue">${escapeHtml(value || "-")}</span>
+    </div>
+  `).join("");
+
   return `
-    <div class="savedSummaryWrap">
-      <div class="savedSummaryBlock">
+    <div class="savedSummaryWrap compact">
+      <div class="savedSummaryBlock compact">
         <div class="savedSummaryBlockTitle">ข้อมูลหลัก</div>
-        <div class="savedSummaryMeta">
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">ผู้บันทึก</span>
-            <span class="savedMetaValue">${escapeHtml(saved.recorderName)}</span>
-          </div>
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">วันเวลาบันทึก</span>
-            <span class="savedMetaValue">${escapeHtml(saved.timestamp)}</span>
-          </div>
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">วันที่</span>
-            <span class="savedMetaValue">${escapeHtml(saved.date)}</span>
-          </div>
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">เวลา</span>
-            <span class="savedMetaValue">${escapeHtml(saved.timeStart)} - ${escapeHtml(saved.timeEnd)}</span>
-          </div>
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">ประเภทหัวหน้างาน</span>
-            <span class="savedMetaValue">${escapeHtml(saved.supervisorType)}</span>
-          </div>
-          <div class="savedMetaItem">
-            <span class="savedMetaLabel">ชื่อหัวหน้างาน</span>
-            <span class="savedMetaValue">${escapeHtml(saved.supervisorName)}</span>
-          </div>
-          <div class="savedMetaItem full">
-            <span class="savedMetaLabel">สถานที่</span>
-            <span class="savedMetaValue">${escapeHtml(saved.location)}</span>
-          </div>
+        <div class="savedMiniGrid">
+          ${metaItems}
+        </div>
+
+        <div class="savedWideItem">
+          <span class="savedMiniLabel">สถานที่</span>
+          <span class="savedMiniValue">${escapeHtml(saved.location || "-")}</span>
         </div>
       </div>
 
-      <div class="savedSummaryBlock">
+      <div class="savedSummaryBlock compact">
         <div class="savedSummaryBlockTitle">รายละเอียดเหตุการณ์</div>
-        <div class="savedTextCard">${escapeHtml(saved.incident)}</div>
+        <div class="savedTextCard compact">${escapeHtml(saved.incident || "-")}</div>
       </div>
 
-      <div class="savedSummaryBlock">
+      <div class="savedSummaryBlock compact">
         <div class="savedSummaryBlockTitle">การแก้ไขเบื้องต้น</div>
-        <div class="savedTextCard">${escapeHtml(saved.initialAction)}</div>
+        <div class="savedTextCard compact">${escapeHtml(saved.initialAction || "-")}</div>
       </div>
 
-      <div class="savedSummaryBlock">
+      <div class="savedSummaryBlock compact">
         <div class="savedSummaryBlockTitle">รูปภาพที่บันทึก (${saved.stampedPreviewUrls.length} ภาพ)</div>
-        <div class="savedPhotoGrid">
-          ${photoHtml || '<div class="savedTextCard">ไม่มีรูปภาพ</div>'}
+        <div class="savedPhotoGrid compact">
+          ${photoHtml || '<div class="savedTextCard compact">ไม่มีรูปภาพ</div>'}
         </div>
       </div>
     </div>
