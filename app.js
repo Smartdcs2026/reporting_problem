@@ -641,7 +641,6 @@
 //   return String(num).padStart(2, "0");
 // }
 
-
 const API_BASE = "https://reportingproblam.somchaibutphon.workers.dev";
 
 const state = {
@@ -671,8 +670,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 function bindElements() {
   el.loginShell = document.getElementById("loginShell");
   el.appPage = document.getElementById("appPage");
-  el.loginCard = document.getElementById("loginCard");
-  el.formCard = document.getElementById("formCard");
 
   el.loginForm = document.getElementById("loginForm");
   el.loginPass = document.getElementById("loginPass");
@@ -792,8 +789,6 @@ async function loadOptions() {
 
     state.options.osm = Array.isArray(data.osm) ? data.osm : [];
     state.options.otm = Array.isArray(data.otm) ? data.otm : [];
-
-    showResult("", "");
   } catch (err) {
     showResult(`โหลดตัวเลือกไม่สำเร็จ: ${err.message}`, "error");
   } finally {
@@ -816,7 +811,7 @@ async function onLogin(e) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "auth",
-        pass: pass
+        pass
       })
     });
 
@@ -949,9 +944,7 @@ function addPhotoBox() {
 async function openCameraForIndex(index) {
   state.activeCameraIndex = index;
 
-  // ถ้าไม่ใช่ secure context เช่น http ธรรมดา กล้องผ่าน getUserMedia มักไม่ทำงาน
   const isSecure = window.isSecureContext || location.hostname === "localhost" || location.hostname === "127.0.0.1";
-
   if (!isSecure) {
     triggerFallbackCameraInput();
     return;
@@ -998,6 +991,7 @@ function showCameraEmpty(message) {
 function triggerFallbackCameraInput() {
   const index = state.activeCameraIndex;
   if (index < 0) return;
+
   closeCameraModal();
 
   const box = el.uploadGrid.querySelector(`.upload-box[data-index="${index}"]`);
@@ -1378,6 +1372,12 @@ function resetForm(clearMessage = true) {
   closeCameraModal();
 
   if (clearMessage) showResult("", "");
+}
+
+function showCameraEmpty(message) {
+  el.cameraVideo.classList.add("hidden");
+  el.cameraEmpty.classList.remove("hidden");
+  el.cameraEmpty.textContent = message;
 }
 
 function showLoginResult(message, type) {
